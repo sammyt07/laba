@@ -221,9 +221,3 @@ int main() {
 
     return 0;
 }
-
-/**
- * TODO
- * - ADD UI for box
- * - Create title and end screens (describe objective, list controls)
- */

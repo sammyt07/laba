@@ -18,7 +18,6 @@ bool showEndScreen = false;
 char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "########################",
     "#                      #",
-    "#                      #",
     "#         Laba         #",
     "#                      #",
     "#                      #",
@@ -30,6 +29,7 @@ char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "#                      #",
     "#    Press Start or    #",
     "#         Enter        #",
+    "#                      #",
     "#                      #",
     "########################"
 };
