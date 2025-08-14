@@ -3,7 +3,8 @@
  * Authors: Sammy T.
  * Implementation of game.hpp
  * 
- * This is Lambda Complex, a 2D, puzzle game.
+ * This is Laba, a 2D, puzzle game with ASCII graphics
+ * inspired by games like Dwarf Fortress and Portal.
  */
 
 #include "game.hpp"
@@ -12,7 +13,8 @@
 #include <stdio.h>
 
 void drawPlayer(int row, int col) {
-    lvl1_[row][col] = '@';
+    currLvl_[row][col] = '@';
+    iprintf("\x1b[%d;%dH@", playerRow_, playerCol_);
 }
 
 void redrawPlayer(int drow, int dcol) {    
@@ -26,23 +28,23 @@ void redrawPlayer(int drow, int dcol) {
     }
 
     // wall collision check
-    if (lvl1_[newRow][newCol] == '#') {
+    if (currLvl_[newRow][newCol] == '#') {
         return;
     }
 
     // obstacle collision check
-    if (lvl1_[newRow][newCol] == '-') {
+    if (currLvl_[newRow][newCol] == '-') {
         return;
     }
 
     // cube collision check
-    if (lvl1_[newRow][newCol] == '[' || lvl1_[newRow][newCol] == ']') {
+    if (currLvl_[newRow][newCol] == '[' || currLvl_[newRow][newCol] == ']') {
         return;
     }
 
     // ---------------------- drawing ------------------------ //
     // erase old player
-    lvl1_[playerRow_][playerCol_] = '.';
+    currLvl_[playerRow_][playerCol_] = '.';
     iprintf("\x1b[%d;%dH.", playerRow_, playerCol_);  // GBA cursor is 1-based
 
     // update position
@@ -54,7 +56,11 @@ void redrawPlayer(int drow, int dcol) {
     iprintf("\x1b[%d;%dH@", playerRow_, playerCol_);
 }
 
-void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
+void drawLvl(int row, int col, char lvl[MAP_HEIGHT][MAP_WIDTH]) {
+    if (lvl != intro_) {
+        drawPlayer(playerRow_, playerCol_);  // draw player at start position
+    }
+
     iprintf("\x1b[2J");  // optional: clear screen first
     for (int x = 0; x < MAP_HEIGHT; x++) {
         for (int y = 0; y < MAP_WIDTH - 1; y++) {  // -1 to ignore null terminator
@@ -66,37 +72,39 @@ void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
 }
 
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
-    // copy map data
+    // copy tiles from lvl to currLvl_
     for (int i = 0; i < MAP_HEIGHT; i++) {
-        currLvl_[i][MAP_WIDTH-1] = lvl[i][MAP_WIDTH-1];
+        for (int j = 0; j < MAP_WIDTH; j++) {
+            currLvl_[i][j] = lvl[i][j];
+        }
     }
-    drawLvl(currLvl_);
+    drawLvl(playerRow_, playerCol_, currLvl_);  // draw map and player
 }
 
-// somme ideas: turrets that fire if player is in their col (basic AI), portal gun
+// notes: turrets that fire if player is in their col (basic AI), portal gun
 
 void interact() {
-    char east = lvl1_[playerRow_][playerCol_+1];  // check player right
+    char east = currLvl_[playerRow_][playerCol_+1];  // check player right
 
     switch (east) {
         case '[':  // cube is to the right
             if (!interacted_) {  // cube is not in player inventory
-                if (lvl1_[playerRow_][playerCol_+3] == '-') {  // cube is partially on platform
+                if (currLvl_[playerRow_][playerCol_+3] == '-') {  // cube is partially on platform
                     // draw empty space and platform
-                    lvl1_[playerRow_][playerCol_+1] = '.';
-                    lvl1_[playerRow_][playerCol_+2] = '-';
+                    currLvl_[playerRow_][playerCol_+1] = '.';
+                    currLvl_[playerRow_][playerCol_+2] = '-';
 
                     // erase cube from screen
                     iprintf("\x1b[%d;%dH.", playerRow_, playerCol_+1);
                     iprintf("\x1b[%d;%dH-", playerRow_, playerCol_+2);
                 }
-                else if (lvl1_[playerRow_][playerCol_+3] == '-') {
+                else if (currLvl_[playerRow_][playerCol_+3] == '-') {
 
                 }  
                 else { // cube is in empty space
                     // add empty space to map
-                    lvl1_[playerRow_][playerCol_+1] = '.';
-                    lvl1_[playerRow_][playerCol_+2] = '.';
+                    currLvl_[playerRow_][playerCol_+1] = '.';
+                    currLvl_[playerRow_][playerCol_+2] = '.';
 
                     // erase cube from screen
                     iprintf("\x1b[%d;%dH.", playerRow_, playerCol_+1);
@@ -110,24 +118,30 @@ void interact() {
             if (interacted_) {  // place cube
                 
                 // add cube to map
-                lvl1_[playerRow_][playerCol_+1] = '[';
-                lvl1_[playerRow_][playerCol_+2] = ']';
+                currLvl_[playerRow_][playerCol_+1] = '[';
+                currLvl_[playerRow_][playerCol_+2] = ']';
 
                 // draw cube on screen
                 iprintf("\x1b[%d;%dH[", playerRow_, playerCol_+1);
                 iprintf("\x1b[%d;%dH]", playerRow_, playerCol_+2);
 
-                // win state: player moves to next level
+                // win state: statically load lvl2_
+                iprintf("\x1b[2J");  // optional: clear screen first
+                // new start pos
+                playerRow_ = 12;
+                playerCol_ = 17;
+                switchLvl(lvl2_);
+
                 interacted_ = false;  // update status: remove cube from player inventory
             } else {
-                
+
             }
             break;
         case '.':  // empty space is to the right
             if (interacted_) {  // place cube
                 // add cube to map
-                lvl1_[playerRow_][playerCol_+1] = '[';
-                lvl1_[playerRow_][playerCol_+2] = ']';
+                currLvl_[playerRow_][playerCol_+1] = '[';
+                currLvl_[playerRow_][playerCol_+2] = ']';
 
                 // draw cube on screen
                 iprintf("\x1b[%d;%dH[", playerRow_, playerCol_+1);
@@ -148,10 +162,7 @@ int main() {
 
     // Initialize game
     interacted_ = false;
-    playerRow_ = 12;  // player start row
-    playerCol_ = 10;  // player start col
-    drawPlayer(playerRow_, playerCol_);
-    drawLvl(lvl1_);
+    switchLvl(intro_);  // set level to first level
 
     while (1) {
         scanKeys();
@@ -166,6 +177,7 @@ int main() {
 
         // handle cube pickup or press with A button
         if (down & KEY_A) interact();
+        if (down & KEY_START) switchLvl(lvl1_);
 
         for (volatile int i = 0; i < 100000; i++);  // crude delay
 
@@ -174,3 +186,9 @@ int main() {
 
     return 0;
 }
+
+/**
+ * TODO
+ * - ADD UI for box
+ * - Create title and end screens (describe objective, list controls)
+ */

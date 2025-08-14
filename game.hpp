@@ -8,10 +8,28 @@
 static constexpr int MAP_HEIGHT = 16;
 static constexpr int MAP_WIDTH = 25;
 
-int playerRow_;
-int playerCol_;
+int playerRow_ = 12;  // lvl1_ start
+int playerCol_ = 10;  // lvl1_ start
 bool interacted_ = false;
-char currLvl_[MAP_HEIGHT][MAP_WIDTH];
+
+char intro_[MAP_HEIGHT][MAP_WIDTH] = {
+    "########################",
+    "#                      #",
+    "#                      #",
+    "#         Laba         #",
+    "#                      #",
+    "#                      #",
+    "#   If a box [] is to  #",
+    "#  the right, press A  #",
+    "#  or X to pick it up. #",
+    "#                      #",
+    "#    Press Start or    #",
+    "#         Enter.       #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "########################"
+};
 char lvl1_[MAP_HEIGHT][MAP_WIDTH] = {
     "########################",
     "#......................#",
@@ -48,18 +66,21 @@ char lvl2_[MAP_HEIGHT][MAP_WIDTH] = {
     "#......................#",
     "########################"
 };
+char currLvl_[MAP_HEIGHT][MAP_WIDTH];
 
 // ------------ rendering ------------- //
 /**
  * \brief      Draws the 2D map array.
+ * \param row  index for the row of the player on the game map.
+ * \param col  index for the col of the player on the game map.
  * \param lvl  2D character-representation of the game map.
  */
-void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]);
+void drawLvl(int row, int col, char lvl[MAP_HEIGHT][MAP_WIDTH]);
         
 /**
  * \brief     Draws the player on the map at the (row, col).
- * \param row int index for the row of the player on the map.
- * \param col int index for the col of the player on the map.
+ * \param row index for the row of the player on the game map.
+ * \param col index for the col of the player on the game map.
  */
 void drawPlayer(int row, int col);
 
@@ -78,8 +99,8 @@ void redrawPlayer(int drow, int dcol);
 void interact();
 
 /**
- * \brief Switches to the next level upon player win state.
- * \param lvl 2D character-representation of the game map.
+ * \brief            Switches to the next level upon player win state.
+ * \param lvl        2D character-representation of the game map.
  */
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]);
 

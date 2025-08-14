@@ -18,4 +18,4 @@ game.gba: game.o
 
 # Clean removes build artifacts and the ROM.
 clean:
-	rm -rf build *.gba *.elf *.map
+	rm -rf build *.o *.gba *.elf *.map *.sav
