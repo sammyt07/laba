@@ -56,8 +56,9 @@ void redrawPlayer(int drow, int dcol) {
     iprintf("\x1b[%d;%dH@", playerRow_, playerCol_);
 }
 
-void drawLvl(int row, int col, char lvl[MAP_HEIGHT][MAP_WIDTH]) {
-    if (lvl != intro_) {
+void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
+    // prevent drawing player on title screen
+    if (!showTitleScreen && !showEndScreen) {
         drawPlayer(playerRow_, playerCol_);  // draw player at start position
     }
 
@@ -78,7 +79,7 @@ void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
             currLvl_[i][j] = lvl[i][j];
         }
     }
-    drawLvl(playerRow_, playerCol_, currLvl_);  // draw map and player
+    drawLvl(currLvl_);  // draw map and player
 }
 
 // notes: turrets that fire if player is in their col (basic AI), portal gun
@@ -125,12 +126,29 @@ void interact() {
                 iprintf("\x1b[%d;%dH[", playerRow_, playerCol_+1);
                 iprintf("\x1b[%d;%dH]", playerRow_, playerCol_+2);
 
-                // win state: statically load lvl2_
+                // win state: switch levels
                 iprintf("\x1b[2J");  // optional: clear screen first
-                // new start pos
-                playerRow_ = 12;
-                playerCol_ = 17;
-                switchLvl(lvl2_);
+                switch (lvlIndex_) {
+                    case 0:
+                        // new start pos
+                        playerRow_ = 12;
+                        playerCol_ = 17;
+                        lvlIndex_++;
+                        switchLvl(lvl2_);
+                        break;
+                    case 1:
+                        // new start pos
+                        playerRow_ = 3;
+                        playerCol_ = 15;
+                        lvlIndex_++;
+                        switchLvl(lvl3_);
+                        break;
+                    case 2:
+                        showEndScreen = true;
+                        lvlIndex_++;
+                        switchLvl(end_);
+                        break;
+                }
 
                 interacted_ = false;  // update status: remove cube from player inventory
             } else {
@@ -162,6 +180,7 @@ int main() {
 
     // Initialize game
     interacted_ = false;
+    showTitleScreen = true;
     switchLvl(intro_);  // set level to first level
 
     while (1) {
@@ -169,15 +188,31 @@ int main() {
         u16 held = keysHeld();
         u16 down = keysDown();
 
-        // basic movement with D-pad
-        if (held & KEY_UP)    redrawPlayer(-1,0);
-        if (held & KEY_DOWN)  redrawPlayer(1,0);
-        if (held & KEY_LEFT)  redrawPlayer(0,-1);
-        if (held & KEY_RIGHT) redrawPlayer(0,1);
+        // handle game start and end
+        if (down & KEY_START) {
+            if (lvlIndex_ < 3) {
+                showTitleScreen = false;
+                switchLvl(lvl1_);
+            } else {
+                // reset game and player pos
+                switchLvl(intro_);
+                showEndScreen = false;
+                lvlIndex_ = 0;
+                playerRow_ = 12;
+                playerCol_ = 10;
+            }
+        }
 
-        // handle cube pickup or press with A button
-        if (down & KEY_A) interact();
-        if (down & KEY_START) switchLvl(lvl1_);
+        // basic movement with D-pad
+        if (!showTitleScreen && !showEndScreen) {
+            if (held & KEY_UP)    redrawPlayer(-1,0);
+            if (held & KEY_DOWN)  redrawPlayer(1,0);
+            if (held & KEY_LEFT)  redrawPlayer(0,-1);
+            if (held & KEY_RIGHT) redrawPlayer(0,1);
+
+            // handle cube pickup or press with A button
+            if (down & KEY_A) interact();
+        }
 
         for (volatile int i = 0; i < 100000; i++);  // crude delay
 

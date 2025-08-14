@@ -10,7 +10,10 @@ static constexpr int MAP_WIDTH = 25;
 
 int playerRow_ = 12;  // lvl1_ start
 int playerCol_ = 10;  // lvl1_ start
+int lvlIndex_ = 0;
 bool interacted_ = false;
+bool showTitleScreen = false;
+bool showEndScreen = false;
 
 char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "########################",
@@ -66,16 +69,50 @@ char lvl2_[MAP_HEIGHT][MAP_WIDTH] = {
     "#......................#",
     "########################"
 };
+char lvl3_[MAP_HEIGHT][MAP_WIDTH] = {
+    "########################",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#..........--..........#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#......................#",
+    "#.[]...................#",
+    "#......................#",
+    "#......................#",
+    "########################"
+};
+char end_[MAP_HEIGHT][MAP_WIDTH] = {
+    "########################",
+    "#                      #",
+    "#                      #",
+    "#         Laba         #",
+    "#                      #",
+    "#                      #",
+    "#    Press Start or    #",
+    "#   Enter to Restart   #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "#                      #",
+    "########################"
+};
 char currLvl_[MAP_HEIGHT][MAP_WIDTH];
 
 // ------------ rendering ------------- //
 /**
  * \brief      Draws the 2D map array.
- * \param row  index for the row of the player on the game map.
- * \param col  index for the col of the player on the game map.
  * \param lvl  2D character-representation of the game map.
  */
-void drawLvl(int row, int col, char lvl[MAP_HEIGHT][MAP_WIDTH]);
+void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]);
         
 /**
  * \brief     Draws the player on the map at the (row, col).
