@@ -8,12 +8,18 @@
 static constexpr int MAP_HEIGHT = 19;  // height limit on GBA
 static constexpr int MAP_WIDTH = 30;   // width limit on GBA
 
-int playerRow_ = 12;  // lvl1_ start
-int playerCol_ = 10;  // lvl1_ start
+int playerRow_ = 12;  // player start pos
+int playerCol_ = 10;  // player start pos
+int turretRow_ = 10;  // turret pos in lvl1_
+int turretCol_ = 25;  // turret pos in lvl1_
 int lvlIndex_ = 0;
+int bulletRow_ = 0;
+int bulletCol_ = 0;
+int bulletDir_ = 0;
 bool interacted_ = false;
-bool showTitleScreen = false;
-bool showEndScreen = false;
+bool showTitleScreen_ = false;
+bool showEndScreen_ = false;
+bool bulletActive_ = false;
 
 char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "#############################",
@@ -130,7 +136,7 @@ char currLvl_[MAP_HEIGHT][MAP_WIDTH];
 void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]);
         
 /**
- * \brief     Draws the player on the map at the (row, col).
+ * \brief     Draws the player on the game map at (row, col).
  * \param row index for the row of the player on the game map.
  * \param col index for the col of the player on the game map.
  */
@@ -138,10 +144,17 @@ void drawPlayer(int row, int col);
 
 /**
  * \brief      Redraws the player to update their position.
- * \param drow int index for the new row of the player.
- * \param dcol int index for the new col of the player.
+ * \param drow int indicating the change in row of the player.
+ * \param dcol int indicating the change in col of the player.
  */
 void redrawPlayer(int drow, int dcol);
+
+/**
+ * \brief     Draws a turret NPC on the game map at (row, col).
+ * \param row index for the row of the turret on the game map.
+ * \param col index for the col of the turret on the game map.
+ */
+void drawTurret(int row, int col);
 
 // ------------ game logic ------------- //
 /**
@@ -155,5 +168,24 @@ void interact();
  * \param lvl        2D character-representation of the game map.
  */
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]);
+
+/**
+ * \brief Scans the left and right of the turret, firing if the
+ *        player is within line of sight.
+ */
+void scanLeftRight();
+
+/**
+ * \brief      Fires bullets from the turret along its line of sight.
+ * \param row  index for the row position of the bullet on the game map.
+ * \param col  index for the col position of the bullet on the game map.
+ * \param dir  Direction of turret line of sight.
+ */
+void startBullet(int row, int col, int dir);
+
+/**
+ * \brief Redraws the bullet along its path of motion.
+ */
+void redrawBullet();
 
 #endif
