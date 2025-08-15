@@ -1,5 +1,5 @@
 # Build the final ROM
-all: game.gba
+all: laba.gba
 
 CXX      := arm-none-eabi-g++
 OBJCOPY  := arm-none-eabi-objcopy
@@ -22,7 +22,7 @@ game.o: game.cpp game.hpp
 game.elf: $(OBJS)
 	$(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
-game.gba: game.elf
+laba.gba: game.elf
 	$(OBJCOPY) -O binary $< $@
 	gbafix $@ -p -t$(TITLE)
 
