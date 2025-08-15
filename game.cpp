@@ -23,7 +23,7 @@ void redrawPlayer(int drow, int dcol) {
     int newCol = playerCol_+dcol;
 
     // bounds check
-    if (newRow < 0 || newRow > MAP_HEIGHT || newCol < 0 || newCol >= MAP_WIDTH) {
+    if (newRow < 0 || newRow >= MAP_HEIGHT || newCol < 0 || newCol >= MAP_WIDTH-1) {
         return;
     }
 
@@ -85,6 +85,8 @@ void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
 // notes: turrets that fire if player is in their col (basic AI), portal gun
 
 void interact() {
+    if (playerCol_ + 2 >= MAP_WIDTH - 1) return;  // needs space for [ and ]
+
     char east = currLvl_[playerRow_][playerCol_+1];  // check player right
 
     switch (east) {

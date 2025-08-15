@@ -1,21 +1,30 @@
 # Build the final ROM
 all: game.gba
 
-# The target "game.o" has two dependencies: "game.cpp" and "game.hpp".
-# The -c flag compiles only (no linking). We create the build/ directory first.
+CXX      := arm-none-eabi-g++
+OBJCOPY  := arm-none-eabi-objcopy
+TITLE    := Laba
+
+CXXFLAGS := -mthumb -mthumb-interwork -O2 -Wall -fomit-frame-pointer \
+            -std=gnu++17 -I. -I$(DEVKITPRO)/libgba/include \
+            -fno-exceptions -fno-rtti
+LDFLAGS  := -mthumb -mthumb-interwork -specs=gba.specs -Wl,-Map,game.map
+LIBS     := -L$(DEVKITPRO)/libgba/lib -lgba
+
+# Objects
+OBJS := game.o
+
+# Compile only
 game.o: game.cpp game.hpp
-	arm-none-eabi-g++ -mthumb -mthumb-interwork -O2 -Wall -fomit-frame-pointer \
-	-std=gnu++17 -I. -I$(DEVKITPRO)/libgba/include \
-	-c game.cpp -o game.o
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# The target "game.gba" depends on "game.o".
-# This links the object file into a GBA ROM.
-game.gba: game.o
-	arm-none-eabi-g++ -mthumb -mthumb-interwork -specs=gba.specs \
-	-Wl,-Map,game.map game.o \
-	-L$(DEVKITPRO)/libgba/lib -lgba -o game.gba
-	@echo "✔ Built game.gba"
+# Link to ELF, then objcopy to raw GBA, then fix header
+game.elf: $(OBJS)
+	$(CXX) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
-# Clean removes build artifacts and the ROM.
+game.gba: game.elf
+	$(OBJCOPY) -O binary $< $@
+	gbafix $@ -p -t$(TITLE)
+
 clean:
-	rm -rf build *.o *.gba *.elf *.map *.sav
+	rm -rf $(OBJS) *.gba *.elf *.map *.sav
