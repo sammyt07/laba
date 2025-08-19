@@ -17,9 +17,12 @@ int bulletRow_ = 0;
 int bulletCol_ = 0;
 int bulletDir_ = 0;
 bool interacted_ = false;
-bool showTitleScreen_ = false;
+bool showTitleScreen_ = true;
 bool showEndScreen_ = false;
 bool bulletActive_ = false;
+bool turretActive_ = true;
+bool isAlive_ = true;
+bool puzzleSolved_ = false;
 
 char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "#############################",
@@ -126,6 +129,27 @@ char end_[MAP_HEIGHT][MAP_WIDTH] = {
     "#                           #",
     "#############################"
 };
+char dead_[MAP_HEIGHT][MAP_WIDTH] = {
+    "#############################",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#            You            #",
+    "#                           #",
+    "#          D I E D          #",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#       Press Start to      #",
+    "#         to Restart        #",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#                           #",
+    "#############################"
+};
 char currLvl_[MAP_HEIGHT][MAP_WIDTH];
 
 // ------------ rendering ------------- //
@@ -187,5 +211,10 @@ void startBullet(int row, int col, int dir);
  * \brief Redraws the bullet along its path of motion.
  */
 void redrawBullet();
+
+/**
+ * \brief Handles player health and combat.
+ */
+void playerHit();
 
 #endif

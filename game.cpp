@@ -42,6 +42,11 @@ void redrawPlayer(int drow, int dcol) {
         return;
     }
 
+    // turret collision check - combat
+    if (currLvl_[newRow][newCol] == 'X') {
+        turretActive_ = false;
+    }
+
     // ---------------------- drawing ------------------------ //
     // erase old player
     currLvl_[playerRow_][playerCol_] = '.';
@@ -72,13 +77,16 @@ void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
     }
 
     // prevent drawing player on title screen
-    if (!showTitleScreen_ && !showEndScreen_) {
+    if (!showTitleScreen_ && !showEndScreen_ && isAlive_) {
         drawPlayer(playerRow_, playerCol_);  // draw player at start position
         drawTurret(turretRow_, turretCol_);  // draw turret
     }
 }
 
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
+    puzzleSolved_ = false;
+    turretActive_ = true;
+
     // copy tiles from lvl to currLvl_
     for (int i = 0; i < MAP_HEIGHT; i++) {
         for (int j = 0; j < MAP_WIDTH; j++) {
@@ -87,8 +95,6 @@ void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
     }
     drawLvl(currLvl_);  // draw map and player
 }
-
-// notes: turrets that fire if player is in their col (basic AI), portal gun
 
 void interact() {
     if (playerCol_ + 2 >= MAP_WIDTH - 1) return;  // needs space for [ and ]
@@ -138,22 +144,28 @@ void interact() {
                 iprintf("\x1b[2J");  // optional: clear screen first
                 switch (lvlIndex_) {
                     case 0:
-                        // new start pos
                         playerRow_ = 12;
                         playerCol_ = 17;
                         lvlIndex_++;
+                        puzzleSolved_ = true;
+                        turretActive_ = false;
                         switchLvl(lvl2_);
                         break;
                     case 1:
-                        // new start pos
                         playerRow_ = 3;
                         playerCol_ = 15;
                         lvlIndex_++;
+                        puzzleSolved_ = true;
+                        turretActive_ = false;
                         switchLvl(lvl3_);
                         break;
                     case 2:
-                        showEndScreen_ = true;
+                        playerRow_ = 12;
+                        playerCol_ = 10;
                         lvlIndex_++;
+                        puzzleSolved_ = true;
+                        turretActive_ = false;
+                        showEndScreen_ = true;
                         switchLvl(end_);
                         break;
                 }
@@ -226,16 +238,24 @@ void redrawBullet() {
     }
 
     // collision check with player
-    if (ahead == '@') {
+    if (currLvl_[bulletRow_][bulletCol_] == '@' || ahead == '@') {  // fixes teleporting through bullets?
         iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
         bulletActive_ = false;
-        // TODO: HANDLE PLAYER HIT
+        playerHit();
         return;
     }
 
     iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);  // erase bullet in previous pos
     bulletCol_ = nextCol;
     iprintf("\x1b[%d;%dH-", bulletRow_, bulletCol_);  // draw bullet in new pos
+}
+
+void playerHit() {
+    // erase player, reset, and trigger game over
+    isAlive_ = false;
+    iprintf("\x1b[%d;%dH ", playerRow_, playerCol_);
+    currLvl_[playerRow_][playerCol_] = '.';
+    drawLvl(dead_);
 }
 
 int main() {
@@ -246,8 +266,6 @@ int main() {
     BG_PALETTE[0] = RGB5(0,0,0);  // set black background
 
     // Initialize game
-    interacted_ = false;
-    showTitleScreen_ = true;
     switchLvl(intro_);  // set level to first level
 
     while (1) {
@@ -255,38 +273,47 @@ int main() {
         u16 held = keysHeld();
         u16 down = keysDown();
 
-        // handle NPC behavior
-        scanLeftRight();
+        if (turretActive_) scanLeftRight();  // handle NPC behavior
 
-        // handle game start and end
         if (down & KEY_START) {
             if (lvlIndex_ < 3) {
-                showTitleScreen_ = false;
-                switchLvl(lvl1_);
+                if (isAlive_) {
+                    // restart game normally
+                    showTitleScreen_ = false;
+                    switchLvl(lvl1_);
+                } else {
+                    // player died: reset player pos and alive status, return to title screen
+                    playerRow_ = 12;
+                    playerCol_ = 10;
+                    isAlive_ = true;
+                    showTitleScreen_ = true;
+                    switchLvl(intro_);
+                }
             } else {
-                // reset game and player pos
-                switchLvl(intro_);
-                showEndScreen_ = false;
+                // win state - player finished game: reset game, return to title screen
                 lvlIndex_ = 0;
-                playerRow_ = 12;
-                playerCol_ = 10;
+                isAlive_ = true;
+                showEndScreen_ = false;
+                switchLvl(intro_);
             }
         }
 
         // basic movement with D-pad
-        if (!showTitleScreen_ && !showEndScreen_) {
-            if (held & KEY_UP)    redrawPlayer(-1,0);
-            if (held & KEY_DOWN)  redrawPlayer(1,0);
-            if (held & KEY_LEFT)  redrawPlayer(0,-1);
-            if (held & KEY_RIGHT) redrawPlayer(0,1);
+        if (isAlive_) {
+            if (!showTitleScreen_ && !showEndScreen_) {
+                if (held & KEY_UP)    redrawPlayer(-1,0);
+                if (held & KEY_DOWN)  redrawPlayer(1,0);
+                if (held & KEY_LEFT)  redrawPlayer(0,-1);
+                if (held & KEY_RIGHT) redrawPlayer(0,1);
 
-            // handle pickup / place cube with A
-            if (down & KEY_A) interact();
+                // handle pickup / place cube with A
+                if (down & KEY_A) interact();
+            }
         }
 
         for (volatile int i = 0; i < 100000; i++);  // crude delay
 
-        redrawBullet();  // bullet advances one step per frame
+        redrawBullet();  // bullet advances one step per frame in-game
 
         VBlankIntrWait();
     }
