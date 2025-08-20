@@ -2,7 +2,7 @@
 #define GAME_HPP_INCLUDED
 
 /**
- * \brief laba is a 2D, ASCII puzzle game inspired by games like Dwarf Fortress and Portal.
+ * \brief Laba! is a 2D, ASCII puzzle game inspired by games like Dwarf Fortress and Portal.
  */
 // ------------ variables ------------- //
 static constexpr int MAP_HEIGHT = 19;  // height limit on GBA

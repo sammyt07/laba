@@ -1,9 +1,9 @@
 /**
  * game.cpp
- * Authors: Sammy T.
+ * Authors: Sammy T and ChatGPT 5.
  * Implementation of game.hpp
  * 
- * This is Laba, a 2D, puzzle game with ASCII graphics
+ * This is Laba!, a 2D, puzzle game with ASCII graphics
  * inspired by games like Dwarf Fortress and Portal.
  */
 
@@ -113,9 +113,6 @@ void interact() {
                     iprintf("\x1b[%d;%dH.", playerRow_, playerCol_+1);
                     iprintf("\x1b[%d;%dH-", playerRow_, playerCol_+2);
                 }
-                else if (currLvl_[playerRow_][playerCol_+3] == '-') {
-                    // huh???? nothing here...
-                }  
                 else { // cube is in empty space
                     // add empty space to map
                     currLvl_[playerRow_][playerCol_+1] = '.';
@@ -168,9 +165,6 @@ void interact() {
                 }
 
                 interacted_ = false;  // update status: remove cube from player inventory
-            } else {
-                // huh nothing here either? i gotta look at this again lol
-            }
             break;
         case '.':  // empty space is to the right
             if (interacted_) {  // place cube
@@ -189,7 +183,6 @@ void interact() {
 }
 
 void scanLeftRight() {
-    // check left
     for (int i = turretCol_ - 1; i > 0; --i) {
         char tile = currLvl_[turretRow_][i];
 
