@@ -85,7 +85,7 @@ void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
 
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
     turretActive_ = true;
-    hasMoved_ = false;  // reset player status
+    bulletActive_ = false;
 
     // copy tiles from lvl to currLvl_
     for (int i = 0; i < MAP_HEIGHT; i++) {
@@ -148,7 +148,6 @@ void interact() {
                         playerCol_ = 17;
                         lvlIndex_++;
                         turretActive_ = false;
-                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(lvl2_);
                         break;
                     case 1:
@@ -156,7 +155,6 @@ void interact() {
                         playerCol_ = 15;
                         lvlIndex_++;
                         turretActive_ = false;
-                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(lvl3_);
                         break;
                     case 2:
@@ -165,7 +163,6 @@ void interact() {
                         lvlIndex_++;
                         turretActive_ = false;
                         showEndScreen_ = true;
-                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(end_);
                         break;
                 }
@@ -217,39 +214,37 @@ void startBullet(int row, int col, int dir) {
 }
 
 void redrawBullet() {
-    if (hasMoved_) {  // fix: bullet is not redrawn across levels
-        if (!bulletActive_) return;
+    if (!bulletActive_) return;
 
-        int nextCol = bulletCol_ + bulletDir_;
+    int nextCol = bulletCol_ + bulletDir_;
 
-        // collision check with bounds
-        if (nextCol <= 0 || nextCol >= MAP_WIDTH - 1) {
-            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-            bulletActive_ = false;
-            return;
-        }
-
-        char ahead = currLvl_[bulletRow_][nextCol];
-
-        // collision check with wall or box
-        if (ahead == '#' || ahead == ']') {
-            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-            bulletActive_ = false;
-            return;
-        }
-
-        // collision check with player
-        if (currLvl_[bulletRow_][bulletCol_] == '@' || ahead == '@') {  // fixes teleporting through bullets?
-            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-            bulletActive_ = false;
-            playerHit();
-            return;
-        }
-
-        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);  // erase bullet in previous pos
-        bulletCol_ = nextCol;
-        iprintf("\x1b[%d;%dH-", bulletRow_, bulletCol_);  // draw bullet in new pos
+    // collision check with bounds
+    if (nextCol <= 0 || nextCol >= MAP_WIDTH - 1) {
+        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+        bulletActive_ = false;
+        return;
     }
+
+    char ahead = currLvl_[bulletRow_][nextCol];
+
+    // collision check with wall or box
+    if (ahead == '#' || ahead == ']') {
+        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+        bulletActive_ = false;
+        return;
+    }
+
+    // collision check with player
+    if (currLvl_[bulletRow_][bulletCol_] == '@' || ahead == '@') {  // fixes teleporting through bullets?
+        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+        bulletActive_ = false;
+        playerHit();
+        return;
+    }
+
+    iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);  // erase bullet in previous pos
+    bulletCol_ = nextCol;
+    iprintf("\x1b[%d;%dH-", bulletRow_, bulletCol_);  // draw bullet in new pos
 }
 
 void playerHit() {
