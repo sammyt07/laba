@@ -22,7 +22,7 @@ bool showEndScreen_ = false;
 bool bulletActive_ = false;
 bool turretActive_ = true;
 bool isAlive_ = true;
-bool puzzleSolved_ = false;
+bool hasMoved_ = false;
 
 char intro_[MAP_HEIGHT][MAP_WIDTH] = {
     "#############################",

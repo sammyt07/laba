@@ -17,7 +17,7 @@ void drawPlayer(int row, int col) {
     iprintf("\x1b[%d;%dH@", row, col);
 }
 
-void redrawPlayer(int drow, int dcol) {    
+void redrawPlayer(int drow, int dcol) {        
     // ---------------------- movement ------------------------ //
     int newRow = playerRow_+drow;
     int newCol = playerCol_+dcol;
@@ -84,8 +84,8 @@ void drawLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
 }
 
 void switchLvl(char lvl[MAP_HEIGHT][MAP_WIDTH]) {
-    puzzleSolved_ = false;
     turretActive_ = true;
+    hasMoved_ = false;  // reset player status
 
     // copy tiles from lvl to currLvl_
     for (int i = 0; i < MAP_HEIGHT; i++) {
@@ -114,7 +114,7 @@ void interact() {
                     iprintf("\x1b[%d;%dH-", playerRow_, playerCol_+2);
                 }
                 else if (currLvl_[playerRow_][playerCol_+3] == '-') {
-
+                    // huh???? nothing here...
                 }  
                 else { // cube is in empty space
                     // add empty space to map
@@ -147,32 +147,32 @@ void interact() {
                         playerRow_ = 12;
                         playerCol_ = 17;
                         lvlIndex_++;
-                        puzzleSolved_ = true;
                         turretActive_ = false;
+                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(lvl2_);
                         break;
                     case 1:
                         playerRow_ = 3;
                         playerCol_ = 15;
                         lvlIndex_++;
-                        puzzleSolved_ = true;
                         turretActive_ = false;
+                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(lvl3_);
                         break;
                     case 2:
                         playerRow_ = 12;
                         playerCol_ = 10;
                         lvlIndex_++;
-                        puzzleSolved_ = true;
                         turretActive_ = false;
                         showEndScreen_ = true;
+                        hasMoved_ = true;  // detect that player has moved this lvl
                         switchLvl(end_);
                         break;
                 }
 
                 interacted_ = false;  // update status: remove cube from player inventory
             } else {
-
+                // huh nothing here either? i gotta look at this again lol
             }
             break;
         case '.':  // empty space is to the right
@@ -217,37 +217,39 @@ void startBullet(int row, int col, int dir) {
 }
 
 void redrawBullet() {
-    if (!bulletActive_) return;
+    if (hasMoved_) {  // fix: bullet is not redrawn across levels
+        if (!bulletActive_) return;
 
-    int nextCol = bulletCol_ + bulletDir_;
+        int nextCol = bulletCol_ + bulletDir_;
 
-    // collision check with bounds
-    if (nextCol <= 0 || nextCol >= MAP_WIDTH - 1) {
-        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-        bulletActive_ = false;
-        return;
+        // collision check with bounds
+        if (nextCol <= 0 || nextCol >= MAP_WIDTH - 1) {
+            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+            bulletActive_ = false;
+            return;
+        }
+
+        char ahead = currLvl_[bulletRow_][nextCol];
+
+        // collision check with wall or box
+        if (ahead == '#' || ahead == ']') {
+            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+            bulletActive_ = false;
+            return;
+        }
+
+        // collision check with player
+        if (currLvl_[bulletRow_][bulletCol_] == '@' || ahead == '@') {  // fixes teleporting through bullets?
+            iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
+            bulletActive_ = false;
+            playerHit();
+            return;
+        }
+
+        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);  // erase bullet in previous pos
+        bulletCol_ = nextCol;
+        iprintf("\x1b[%d;%dH-", bulletRow_, bulletCol_);  // draw bullet in new pos
     }
-
-    char ahead = currLvl_[bulletRow_][nextCol];
-
-    // collision check with wall or box
-    if (ahead == '#' || ahead == ']') {
-        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-        bulletActive_ = false;
-        return;
-    }
-
-    // collision check with player
-    if (currLvl_[bulletRow_][bulletCol_] == '@' || ahead == '@') {  // fixes teleporting through bullets?
-        iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);
-        bulletActive_ = false;
-        playerHit();
-        return;
-    }
-
-    iprintf("\x1b[%d;%dH.", bulletRow_, bulletCol_);  // erase bullet in previous pos
-    bulletCol_ = nextCol;
-    iprintf("\x1b[%d;%dH-", bulletRow_, bulletCol_);  // draw bullet in new pos
 }
 
 void playerHit() {
